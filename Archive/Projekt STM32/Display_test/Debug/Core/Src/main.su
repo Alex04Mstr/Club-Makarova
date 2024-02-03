@@ -1,0 +1,15 @@
+../Core/Src/hd44780.c:6:6:_delay_ms	16	static
+../Core/Src/hd44780.c:11:6:_delay_us	16	static
+../Core/Src/hd44780.c:20:6:lcd_init	8	static
+../Core/Src/hd44780.c:223:6:lcd_set_user_char	32	static
+../Core/Src/hd44780.c:232:6:lcd_set_xyi	16	static
+../Core/Src/hd44780.c:240:6:lcd_clear	8	static
+../Core/Src/hd44780.c:245:6:lcd_set_state	24	static
+../Core/Src/hd44780.c:267:6:lcd_send	16	static
+../Core/Src/hd44780.c:350:9:Rus	16	static
+../Core/Src/hd44780.c:559:6:lcd_out	16	static
+../Core/Src/main.c:65:5:main	8	static
+../Core/Src/main.c:112:6:SystemClock_Config	80	static
+../Core/Src/main.c:148:13:MX_TIM3_Init	32	static
+../Core/Src/main.c:193:13:MX_GPIO_Init	48	static
+../Core/Src/main.c:232:6:Error_Handler	8	static,ignoring_inline_asm
