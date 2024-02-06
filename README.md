@@ -5,13 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
-        /* Общий стиль для заголовков */
+
 h1, h2, h3 {
   font-family: Arial, sans-serif;
   color: #333;
 }
 
-/* Стиль для основного контейнера страницы */
 .container {
   width: 960px;
   margin: 0 auto;
@@ -41,7 +40,6 @@ h1, h2, h3 {
   text-decoration: none;
 }
 
-/* Стиль для фона и основного контента */
 .main-content {
   background-color: #f4f4f4;
   padding: 20px;
