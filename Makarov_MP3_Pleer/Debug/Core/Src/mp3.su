@@ -1,0 +1,6 @@
+../Core/Src/mp3.c:32:6:MP3_clear_RXBuffer	4	static
+../Core/Src/mp3.c:46:10:MP3_checksum	16	static
+../Core/Src/mp3.c:57:6:MP3_send_cmd	24	static
+../Core/Src/mp3.c:83:6:MP3_queue_processing	8	static
+../Core/Src/mp3.c:95:6:MP3_set_folder	16	static
+../Core/Src/mp3.c:99:6:MP3_play	24	static
