@@ -89,13 +89,13 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_Delay(500);
-  MP3_send_cmd(MP3_VOLUME, 0, 20);
+  MP3_send_cmd(MP3_VOLUME, 0, 10); //0-30
   HAL_Delay(10);
 
-  MP3_set_folder(1);
-  HAL_Delay(10);
+  //MP3_set_folder(1);
+  //HAL_Delay(10);
 
-  MP3_send_cmd(MP3_PLAY_FOLDER_FILE, 1, 1);
+  MP3_play(3);
   /* USER CODE END 2 */
 
   /* Infinite loop */

@@ -16,7 +16,7 @@ volatile uint8_t mp3_RXi;
 volatile char mp3_RXc;
 volatile char mp3_RX_Buf[mp3_RX_Buf_SIZE] = {'\0'};
 volatile uint8_t mp3_folder = 1;
-static uint8_t mp3_cmd_buf[10] = {0x7E, 0xFF, 0x06, 0x00, 0x01, 0x0, 0x0, 0x00, 0x00, 0xEF};
+static uint8_t mp3_cmd_buf[10] = {0x7E, 0xFF, 0x6, 0x00, 0x01, 0x0, 0x0, 0x00, 0x00, 0xEF};
 volatile uint8_t mp3_queue[MP3_QUEUE_LEN] = {MP3_NO_VALUE, MP3_NO_VALUE, MP3_NO_VALUE, MP3_NO_VALUE, MP3_NO_VALUE, MP3_NO_VALUE, MP3_NO_VALUE, MP3_NO_VALUE, MP3_NO_VALUE, MP3_NO_VALUE};
 volatile int8_t mp3_queue_id = 0;
 volatile uint8_t mp3_flag = 0;
@@ -59,7 +59,6 @@ void MP3_send_cmd (uint8_t cmd, uint16_t high_arg, uint16_t low_arg) {
 	uint16_t checksum;
 
 	mp3_cmd_buf[3] = cmd;
-
 	mp3_cmd_buf[5] = high_arg;
 	mp3_cmd_buf[6] = low_arg;
 
@@ -102,8 +101,8 @@ void MP3_play(uint16_t num) {
 	mp3_cmd_buf[3] = MP3_TRAKING_NUM;
 	mp3_cmd_buf[4] = 0;
 
-	mp3_cmd_buf[5] = (num >> 8) & 0xFF;
-	mp3_cmd_buf[6] = num & 0xFF;
+	mp3_cmd_buf[5] = 0;
+	mp3_cmd_buf[6] = num;
 
 	checksum = MP3_checksum();
 	mp3_cmd_buf[7] = (uint8_t) ((checksum >> 8) & 0x00FF);
