@@ -111,5 +111,18 @@ void MP3_play(uint16_t num) {
 	HAL_UART_Transmit(&huart1, mp3_cmd_buf, 10, 0xffff);
 }
 
+void MP3_pause () {
+	uint16_t checksum;
 
+	mp3_cmd_buf[3] = MP3_PAUSE;
 
+	mp3_cmd_buf[4] = 0;
+
+	mp3_cmd_buf[5] = 0;
+	mp3_cmd_buf[6] = 0;
+
+	checksum = MP3_checksum();
+	mp3_cmd_buf[7] = (uint8_t) ((checksum >> 8) & 0x00FF);
+	mp3_cmd_buf[8] = (uint8_t) (checksum & 0x00FF);
+	HAL_UART_Transmit(&huart1, mp3_cmd_buf, 10, 0xffff);
+}

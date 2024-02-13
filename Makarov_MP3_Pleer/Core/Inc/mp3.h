@@ -72,4 +72,5 @@ void MP3_say(uint8_t prefix, int value, uint8_t suffix);
 void MP3_queue_processing(void);
 void MP3_set_folder (uint8_t folder);
 void MP3_play(uint16_t num);
+void MP3_pause();
 #endif
