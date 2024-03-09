@@ -88,36 +88,49 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+  uint8_t ok[]="OK";
+  uint8_t hello[]="Hello, user!";
+  uint8_t transmitBuffer[] = "Hello world!\n\r"; // Объявляем массив с переменной ввиде отправляемой строки
   uint8_t buffer[]= ""; // Служебный массив, для хранения переменной
+
+  HAL_UART_Transmit_IT(&huart1,transmitBuffer,14); // Отправка массива (какой usart, какой буффер, сколько бит отправлять)
+
+  //HAL_UART_Transmit_IT(&huart2,buffer,14); // Отправка массива (какой usart, какой буффер, сколько бит отправлять)
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  /*HAL_UART_Receive(&huart1,(uint8_t*)buffer, 1,10 );
-	  if (buffer[0] == 'w'){ // ВАЖНО кавычки (" ") считаются как отдельная строка, а апострофы (' ') как отдельная переменная
-		  HAL_GPIO_WritePin(UP_GPIO_Port,UP_Pin,GPIO_PIN_SET);
-	  }
-	  else if (buffer[0] == 'a'){
-		  HAL_GPIO_WritePin(LEFT_GPIO_Port,LEFT_Pin,GPIO_PIN_SET);
-	  }
-	  else if (buffer[0] == 's'){ // ВАЖНО кавычки (" ") считаются как отдельная строка, а апострофы (' ') как отдельная переменная
-		  HAL_GPIO_WritePin(RIGHT_GPIO_Port,RIGHT_Pin,GPIO_PIN_SET);
-	  }
-	  else if (buffer[0] == 'd'){
-		  HAL_GPIO_WritePin(DOWN_GPIO_Port,DOWN_Pin,GPIO_PIN_SET);
-	  }
+	  HAL_UART_Receive_IT(&huart1,(uint8_t*)buffer, 5); // Получение данных (какой usart,какой буффер, сколько бит получать, окно получения данных)
 
+
+	  if (buffer[0]=='w'){
+		  HAL_GPIO_WritePin(R_GO_GPIO_Port, R_GO_Pin,GPIO_PIN_SET);
+		  HAL_GPIO_WritePin(L_GO_GPIO_Port, L_GO_Pin,GPIO_PIN_SET);
+		  HAL_UART_Transmit_IT(&huart1, ok, 2);
+	  }
+	  if (buffer[0]=='a'){
+		  HAL_GPIO_WritePin(R_BACK_GPIO_Port, R_GO_Pin,GPIO_PIN_SET);
+		  HAL_GPIO_WritePin(L_GO_GPIO_Port, L_GO_Pin,GPIO_PIN_SET);
+		  HAL_UART_Transmit_IT(&huart1, ok, 2);
+	  }
+	  if (buffer[0]=='s'){
+		  HAL_GPIO_WritePin(R_BACK_GPIO_Port, R_GO_Pin,GPIO_PIN_SET);
+		  HAL_GPIO_WritePin(L_BACK_GPIO_Port, L_GO_Pin,GPIO_PIN_SET);
+		  HAL_UART_Transmit_IT(&huart1, ok, 2);
+	  }
+	  if (buffer[0]=='d'){
+		  HAL_GPIO_WritePin(R_GO_GPIO_Port, R_GO_Pin,GPIO_PIN_SET);
+		  HAL_GPIO_WritePin(L_BACK_GPIO_Port, L_GO_Pin,GPIO_PIN_SET);
+		  HAL_UART_Transmit_IT(&huart1, ok, 2);
+	  }
 	  else{
-		  HAL_GPIO_WritePin(DOWN_GPIO_Port,DOWN_Pin,GPIO_PIN_RESET);
-	  	  HAL_GPIO_WritePin(RIGHT_GPIO_Port,RIGHT_Pin,GPIO_PIN_RESET);
-	  	  HAL_GPIO_WritePin(LEFT_GPIO_Port,LEFT_Pin,GPIO_PIN_RESET);
-	  	  HAL_GPIO_WritePin(UP_GPIO_Port,UP_Pin,GPIO_PIN_RESET);
-  */
-	  HAL_GPIO_WritePin(UP_GPIO_Port,UP_Pin,GPIO_PIN_SET);
-  }
-  }
+		  HAL_GPIO_WritePin(R_GO_GPIO_Port, R_GO_Pin,GPIO_PIN_RESET);
+		  HAL_GPIO_WritePin(L_GO_GPIO_Port, L_GO_Pin,GPIO_PIN_RESET);
+	  }
+	  	  }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -134,11 +147,6 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /** Configure the main internal regulator output voltage
-  */
-  __HAL_RCC_PWR_CLK_ENABLE();
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
@@ -146,11 +154,8 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 168;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 4;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI_DIV2;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL16;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -162,10 +167,10 @@ void SystemClock_Config(void)
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -187,7 +192,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 9600;
+  huart1.Init.BaudRate = 115200;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -214,18 +219,28 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, DOWN_Pin|UP_Pin|RIGHT_Pin|LEFT_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, R_GO_Pin|R_BACK_Pin|L_GO_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : DOWN_Pin UP_Pin RIGHT_Pin LEFT_Pin */
-  GPIO_InitStruct.Pin = DOWN_Pin|UP_Pin|RIGHT_Pin|LEFT_Pin;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(L_BACK_GPIO_Port, L_BACK_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : R_GO_Pin R_BACK_Pin L_GO_Pin */
+  GPIO_InitStruct.Pin = R_GO_Pin|R_BACK_Pin|L_GO_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : L_BACK_Pin */
+  GPIO_InitStruct.Pin = L_BACK_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(L_BACK_GPIO_Port, &GPIO_InitStruct);
 
 }
 

@@ -27,7 +27,7 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f4xx_hal.h"
+#include "stm32f1xx_hal.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -57,14 +57,14 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define DOWN_Pin GPIO_PIN_11
-#define DOWN_GPIO_Port GPIOB
-#define UP_Pin GPIO_PIN_12
-#define UP_GPIO_Port GPIOB
-#define RIGHT_Pin GPIO_PIN_13
-#define RIGHT_GPIO_Port GPIOB
-#define LEFT_Pin GPIO_PIN_14
-#define LEFT_GPIO_Port GPIOB
+#define R_GO_Pin GPIO_PIN_11
+#define R_GO_GPIO_Port GPIOA
+#define R_BACK_Pin GPIO_PIN_12
+#define R_BACK_GPIO_Port GPIOA
+#define L_GO_Pin GPIO_PIN_15
+#define L_GO_GPIO_Port GPIOA
+#define L_BACK_Pin GPIO_PIN_3
+#define L_BACK_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
