@@ -89,7 +89,8 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   uint8_t ok[]="OK";
-  uint8_t hello[]="Hello, user!";
+  uint8_t human[]="ќбнаружен человек";
+
   uint8_t transmitBuffer[] = "Hello world!\n\r"; // ќбъ€вл€ем массив с переменной ввиде отправл€емой строки
   uint8_t buffer[]= ""; // —лужебный массив, дл€ хранени€ переменной
 
@@ -129,6 +130,10 @@ int main(void)
 		  HAL_GPIO_WritePin(R_GO_GPIO_Port, R_GO_Pin,GPIO_PIN_RESET);
 		  HAL_GPIO_WritePin(L_GO_GPIO_Port, L_GO_Pin,GPIO_PIN_RESET);
 	  }
+	  if (buffer[0]=='y'){ // получение данных с компьютера с распозновани€ камеры
+		  HAL_UART_Transmit_IT(&huart1, human, 17);
+	  }
+
 	  	  }
 
     /* USER CODE END WHILE */
