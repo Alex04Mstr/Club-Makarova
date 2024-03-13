@@ -10,7 +10,6 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include Drivers/STM32F1xx_HAL_Driver/Src/subdir.mk
--include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
 -include objects.mk
 
@@ -60,8 +59,8 @@ all: main-build
 main-build: RC_Model.elf secondary-outputs
 
 # Tool invocations
-RC_Model.elf RC_Model.map: $(OBJS) $(USER_OBJS) F:\Club-Makarova\RC_model\STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "RC_Model.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"F:\Club-Makarova\RC_model\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="RC_Model.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+RC_Model.elf RC_Model.map: $(OBJS) $(USER_OBJS) fail-specified-linker-script-missing makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "RC_Model.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 --specs=nosys.specs -Wl,-Map="RC_Model.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
