@@ -26,7 +26,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+#define usTIM TIM3
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -39,6 +39,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+TIM_HandleTypeDef htim3;
+
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
@@ -49,13 +51,15 @@ UART_HandleTypeDef huart1;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
-
+void usDelay(uint32_t uSec);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+const float Sos = 0.034/2;
+int distance;
 /* USER CODE END 0 */
 
 /**
@@ -65,7 +69,7 @@ static void MX_USART1_UART_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	uint32_t numTicks;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -87,15 +91,18 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   uint8_t ok[]="OK";
   uint8_t human[]="Обнаружен человек";
 
   uint8_t transmitBuffer[] = "Hello world!\n\r"; // Объявляем массив с переменной ввиде отправляемой строки
   uint8_t buffer[]= ""; // Служебный массив, для хранения переменной
+  const uint8_t buf[] = "\n";
 
   HAL_UART_Transmit_IT(&huart1,transmitBuffer,14); // Отправка массива (какой usart, какой буффер, сколько бит отправлять)
-
+  HAL_TIM_Base_Start_IT(&htim3);
+  HAL_TIM_Base_Start(&htim3);
   //HAL_UART_Transmit_IT(&huart2,buffer,14); // Отправка массива (какой usart, какой буффер, сколько бит отправлять)
   /* USER CODE END 2 */
 
@@ -103,36 +110,85 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  HAL_UART_Receive_IT(&huart1,(uint8_t*)buffer, 5); // Получение данных (какой usart,какой буффер, сколько бит получать, окно получения данных)
+	   // Получение данных (какой usart,какой буффер, сколько бит получать, окно получения данных)
 
+	  HAL_GPIO_WritePin(Trig_GPIO_Port, Trig_Pin, RESET);
+	  usDelay(3);
 
-	  if (buffer[0]=='w'){
-		  HAL_GPIO_WritePin(R_GO_GPIO_Port, R_GO_Pin,GPIO_PIN_SET);
-		  HAL_GPIO_WritePin(L_GO_GPIO_Port, L_GO_Pin,GPIO_PIN_SET);
-		  HAL_UART_Transmit_IT(&huart1, ok, 2);
+	  HAL_GPIO_WritePin(Trig_GPIO_Port, Trig_Pin, SET);
+	  usDelay(10);
+	  HAL_GPIO_WritePin(Trig_GPIO_Port, Trig_Pin, RESET);
+
+	  while(HAL_GPIO_ReadPin(Echo_GPIO_Port, Echo_Pin) == RESET);
+	  numTicks = 0;
+	  while(HAL_GPIO_ReadPin(Echo_GPIO_Port, Echo_Pin) == SET)
+	  {
+		  numTicks++;
+		  usDelay(2);
 	  }
-	  if (buffer[0]=='a'){
-		  HAL_GPIO_WritePin(R_BACK_GPIO_Port, R_GO_Pin,GPIO_PIN_SET);
-		  HAL_GPIO_WritePin(L_GO_GPIO_Port, L_GO_Pin,GPIO_PIN_SET);
-		  HAL_UART_Transmit_IT(&huart1, ok, 2);
+	  distance = numTicks * 4.8 * Sos;
+	  char num1[10];
+	  sprintf(num1,"%3d",distance);
+	  HAL_UART_Transmit_IT(&huart1,num1,3);
+	  HAL_UART_Transmit_IT(&huart1, buf, 1);
+	  HAL_Delay(300);
+	  if(distance <= 15) {
+		  HAL_GPIO_WritePin(R_GO_GPIO_Port, R_GO_Pin, RESET);
+		  HAL_GPIO_WritePin(L_GO_GPIO_Port, L_GO_Pin, RESET);
+		  HAL_GPIO_WritePin(R_BACK_GPIO_Port, R_BACK_Pin, RESET);
+		  HAL_GPIO_WritePin(L_BACK_GPIO_Port, L_BACK_Pin, RESET);
+		  HAL_Delay(1000);
+		  HAL_GPIO_WritePin(R_BACK_GPIO_Port, R_BACK_Pin, SET);
+		  HAL_GPIO_WritePin(L_BACK_GPIO_Port, L_BACK_Pin, SET);
+		  HAL_Delay(1000);
+		  HAL_GPIO_WritePin(R_BACK_GPIO_Port, R_BACK_Pin, RESET);
+		  HAL_GPIO_WritePin(L_BACK_GPIO_Port, L_BACK_Pin, RESET);
+		  continue;
 	  }
-	  if (buffer[0]=='s'){
-		  HAL_GPIO_WritePin(R_BACK_GPIO_Port, R_GO_Pin,GPIO_PIN_SET);
-		  HAL_GPIO_WritePin(L_BACK_GPIO_Port, L_GO_Pin,GPIO_PIN_SET);
-		  HAL_UART_Transmit_IT(&huart1, ok, 2);
+
+	  HAL_UART_Receive_IT(&huart1,(uint8_t*)buffer, 5);
+	  switch(buffer[0])
+	  {
+	  	  case 'w':
+	  		  HAL_GPIO_WritePin(R_BACK_GPIO_Port, R_BACK_Pin, RESET);
+	  		  HAL_GPIO_WritePin(L_BACK_GPIO_Port, L_BACK_Pin, RESET);
+	  		  HAL_GPIO_WritePin(R_GO_GPIO_Port, R_GO_Pin, SET);
+	  		  HAL_GPIO_WritePin(L_GO_GPIO_Port, L_GO_Pin, SET);
+	  	  	  break;
+	  	  case 'a':
+	  		  HAL_GPIO_WritePin(R_BACK_GPIO_Port, R_BACK_Pin, RESET);
+	  		  HAL_GPIO_WritePin(L_GO_GPIO_Port, L_GO_Pin, RESET);
+	  		  HAL_GPIO_WritePin(R_GO_GPIO_Port, R_GO_Pin, SET);
+	  		  HAL_GPIO_WritePin(L_BACK_GPIO_Port, L_BACK_Pin, SET);
+	  		  break;
+	  	  case 's':
+	  		  HAL_GPIO_WritePin(R_GO_GPIO_Port, R_GO_Pin, RESET);
+	  		  HAL_GPIO_WritePin(L_GO_GPIO_Port, L_GO_Pin, RESET);
+	  		  HAL_GPIO_WritePin(R_BACK_GPIO_Port, R_BACK_Pin, SET);
+	  		  HAL_GPIO_WritePin(L_BACK_GPIO_Port, L_BACK_Pin, SET);
+	  		  break;
+	  	  case 'd':
+	  		  HAL_GPIO_WritePin(R_GO_GPIO_Port, R_GO_Pin, RESET);
+	  		  HAL_GPIO_WritePin(L_BACK_GPIO_Port, L_BACK_Pin, RESET);
+	  		  HAL_GPIO_WritePin(R_BACK_GPIO_Port, R_BACK_Pin, SET);
+	  		  HAL_GPIO_WritePin(L_GO_GPIO_Port, L_GO_Pin, SET);
+	  		  break;
+	  	  case 't':
+	  		  HAL_GPIO_WritePin(R_BACK_GPIO_Port, R_BACK_Pin, RESET);
+	  		  HAL_GPIO_WritePin(L_BACK_GPIO_Port, L_BACK_Pin, RESET);
+	  		  HAL_GPIO_WritePin(R_GO_GPIO_Port, R_GO_Pin, RESET);
+	  		  HAL_GPIO_WritePin(L_GO_GPIO_Port, L_GO_Pin, RESET);
+	  		  break;
+	  	  default:
+	  		  break;
 	  }
-	  if (buffer[0]=='d'){
-		  HAL_GPIO_WritePin(R_GO_GPIO_Port, R_GO_Pin,GPIO_PIN_SET);
-		  HAL_GPIO_WritePin(L_BACK_GPIO_Port, L_GO_Pin,GPIO_PIN_SET);
-		  HAL_UART_Transmit_IT(&huart1, ok, 2);
-	  }
-	  else{
-		  HAL_GPIO_WritePin(R_GO_GPIO_Port, R_GO_Pin,GPIO_PIN_RESET);
-		  HAL_GPIO_WritePin(L_GO_GPIO_Port, L_GO_Pin,GPIO_PIN_RESET);
-	  }
-	  if (buffer[0]=='y'){ // получение данных с компьютера с распознования камеры
+	  	  /*
+	  else if (buffer[0]=='y'){ // получение данных с компьютера с распознования камеры
 		  HAL_UART_Transmit_IT(&huart1, human, 17);
-	  }
+
+
+		  HAL_UART_Receive_IT(&huart1,(uint8_t*)buffer, 5);
+	  }*/
 
 	  	  }
 
@@ -182,6 +238,51 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 64-1;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 65535;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+
+}
+
+/**
   * @brief USART1 Initialization Function
   * @param None
   * @retval None
@@ -224,33 +325,49 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, R_GO_Pin|R_BACK_Pin|L_GO_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, Trig_Pin|L_BACK_Pin|R_GO_Pin|R_BACK_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(L_BACK_GPIO_Port, L_BACK_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(L_GO_GPIO_Port, L_GO_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : R_GO_Pin R_BACK_Pin L_GO_Pin */
-  GPIO_InitStruct.Pin = R_GO_Pin|R_BACK_Pin|L_GO_Pin;
+  /*Configure GPIO pin : Echo_Pin */
+  GPIO_InitStruct.Pin = Echo_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(Echo_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Trig_Pin L_BACK_Pin R_GO_Pin R_BACK_Pin */
+  GPIO_InitStruct.Pin = Trig_Pin|L_BACK_Pin|R_GO_Pin|R_BACK_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : L_BACK_Pin */
-  GPIO_InitStruct.Pin = L_BACK_Pin;
+  /*Configure GPIO pin : L_GO_Pin */
+  GPIO_InitStruct.Pin = L_GO_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(L_BACK_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(L_GO_GPIO_Port, &GPIO_InitStruct);
 
 }
 
 /* USER CODE BEGIN 4 */
-
+void usDelay(uint32_t uSec)
+{
+	if(uSec < 2) uSec = 2;
+	usTIM->ARR = uSec - 1;
+	usTIM->EGR = 1;
+	usTIM->SR &= ~1;
+	usTIM->CR1 |= 1;
+	while((usTIM->SR&0x0001) != 1);
+	usTIM->SR &= ~(0x0001);
+}
 /* USER CODE END 4 */
 
 /**
